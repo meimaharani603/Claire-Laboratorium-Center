@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.welcome-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #687EFF;
+}
+.dashboard-time {
+    font-size: 20px;
+    font-weight: 600;
+    color: #80B3FF;
+    text-align: right;
+}
+
+</style>
+
+
+<!-- TOP SECTION -->
+<div class="row align-items-center mb-4">
+
+    <!-- LEFT: Welcome Text -->
+    <div class="col-md-8 mt-4">
+        <div class="welcome-title">
+            Welcome back, <span style="color:#80B3FF;">{{ current_user.username }}</span> 👋
+        </div>
+        <p class="text-muted">Glad to see you again! Here’s what’s happening today:</p>
+    </div>
+
+    <!-- RIGHT: Date & Time -->
+    <div class="col-md-4 dashboard-time">
+        <div id="dashboard-date"></div>
+        <div id="dashboard-time"></div>
+    </div>
+
+</div>
+
+
+
+<script>
+function updateDateTime() {
+    const now = new Date();
+
+    document.getElementById("dashboard-date").innerText =
+        now.toLocaleDateString("en-US", { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+    document.getElementById("dashboard-time").innerText =
+        now.toLocaleTimeString();
+}
+
+setInterval(updateDateTime, 1000);
+updateDateTime();
+</script>
+{% endblock %}

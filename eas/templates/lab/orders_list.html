@@ -1,0 +1,472 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+
+/* ======= GLOBAL INPUT STYLE ======= */
+.input-style {
+    border-radius: 10px;
+    height: 50px;
+    border: 2px solid #98E4FF;
+    padding-left: 12px;
+    transition: 0.25s ease;
+}
+.input-style:hover { border-color: #80B3FF !important; }
+.input-style:focus {
+    border-color: #6A8AFF !important;
+    box-shadow: 0 0 10px rgba(106,138,255,.4),
+                0 0 15px rgba(152,228,255,.3) !important;
+    outline: none !important;
+}
+
+/* MODAL BOX */
+.modal-box {
+    border-radius: 28px;
+    padding: 0;
+}
+.modal-head {
+    background: white;
+    border-bottom: none;
+    padding: 20px 24px;
+    border-top-left-radius: 28px;
+    border-top-right-radius: 28px;
+}
+.modal-title {
+    font-weight: 700;
+    color: #80B3FF;
+}
+
+/* SAVE / CANCEL BUTTON */
+.btn-save {
+    color: #3aa422ff;
+    background: white;
+    border-radius: 16px;
+    border: 2px solid #3aa422ff;
+    font-weight: 700;
+    padding: 8px 18px;
+}
+.btn-cancel {
+    border-radius: 16px;
+    padding: 8px 18px;
+    color: #f82a2a;
+    background: white;
+    border: 2px solid #f82a2a;
+    font-weight: 700;
+}
+
+/* DELETE WARNING STYLE */
+.delete-icon-wrapper { display: flex; justify-content: center; margin-bottom: 12px; }
+.delete-icon-circle {
+    width: 58px; height: 58px;
+    background: white;
+    border: 2px solid #ff6b6b;
+    color: #ff6b6b;
+    border-radius: 50%;
+    display: flex;
+    align-items: center; justify-content: center;
+    font-size: 36px;
+}
+.delete-title { font-weight: 700; font-size: 20px; color: #687EFF; }
+.delete-desc { font-size: 14px; opacity: .75; }
+.delete-btn-group {
+    display: flex; justify-content: center; gap: 12px; margin-top: 25px;
+}
+.delete-cancel {
+    padding: 10px 26px;
+    border-radius: 14px;
+    border: 2px solid #80B3FF;
+    color: #80B3FF;
+    background: white;
+    font-weight: 600;
+}
+.delete-confirm {
+    padding: 10px 26px;
+    border-radius: 14px;
+    background: #ff6b6b; color: white; border: none;
+    font-weight: 600;
+}
+
+</style>
+
+
+<!-- ===================== TITLE ====================== -->
+<h3 class="mt-4"
+    style="font-weight:700;font-size:30px;
+           background:linear-gradient(40deg,#687EFF,#80B3FF,#98E4FF,#B6FFFA);
+           -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+           display:inline-block;">
+    Manajemen Data Order
+</h3>
+
+
+<!-- ===================== SEARCH + ADD BTN ====================== -->
+<div class="d-flex justify-content-between align-items-center mt-3 mb-3">
+
+    <div class="input-group" style="max-width:280px;border-radius:16px;overflow:hidden;border:2px solid #80B3FF;">
+        <span class="input-group-text" style="background:white;border:none;">
+            <i class="bi bi-search" style="color:#80B3FF;"></i>
+        </span>
+        <input type="text" id="searchInput" class="form-control" placeholder="Cari order..." style="border:none;">
+    </div>
+
+    <button class="btn"
+            data-bs-toggle="modal"
+            data-bs-target="#modalAddOrder"
+            style="color:#80B3FF;border-radius:16px;border:2px solid #80B3FF;background:white;">
+        + Tambah Order
+    </button>
+
+</div>
+
+
+<!-- ===================== TABLE ====================== -->
+<div class="card shadow-sm overflow-hidden" style="border-radius:16px;">
+    <div class="card-body p-0">
+
+        <table class="table mb-0" id="ordersTable">
+            <thead class="table-primary">
+                <tr>
+                    <th>No Order</th>
+                    <th>Pasien</th>
+                    <th>Tanggal</th>
+                    <th>Daftar Tes</th>
+                    <th width="200">Aksi</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for o in orders %}
+                <tr>
+                    <td>{{ o.order_number }}</td>
+                    <td>{{ o.patient.name if o.patient else '-' }}</td>
+                    <td>{{ o.created_at.strftime("%d/%m/%Y") }}</td>
+
+                    <td>
+                        <ol class="mb-0 ps-3">
+                        {% for item in o.items %}
+                            <li>{{ item.test.name }}</li>
+                        {% endfor %}
+                        </ol>
+                    </td>
+
+                    <td>
+                        <a href="/lab/orders?modal=edit&order_id={{ o.id }}"
+                           class="btn btn-sm btn-outline-warning">
+                           <i class="bi bi-pencil"></i>
+                        </a>
+
+                        <a href="/lab/orders?modal=delete&order_id={{ o.id }}"
+                           class="btn btn-sm btn-outline-danger">
+                           <i class="bi bi-trash"></i>
+                        </a>
+
+                        <a href="/lab/orders?modal=additem&order_id={{ o.id }}"
+                           class="btn btn-sm btn-outline-primary">
+                           <i class="bi bi-plus-lg"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+
+    </div>
+</div>
+
+
+<!-- ===================== PAGINATION ====================== -->
+<nav class="mt-3">
+    <ul class="pagination justify-content-end" id="pagination"></ul>
+</nav>
+
+
+
+<!-- ========================================================
+      MODAL ADD ORDER
+========================================================= -->
+<div class="modal fade" id="modalAddOrder" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content modal-box">
+
+      <div class="modal-header modal-head">
+        <h5 class="modal-title">Tambah Order</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form method="post" action="/lab/orders/create">
+        <div class="modal-body">
+
+            <label class="form-label">No Order</label>
+            <input class="form-control input-style mb-3"
+                   name="order_number"
+                   value="{{ new_order_number }}"
+                   readonly>
+
+            <label class="form-label">Pasien</label>
+            <select class="form-select input-style mb-3" name="patient_id">
+                {% for p in patients %}
+                <option value="{{ p.id }}">{{ p.name }}</option>
+                {% endfor %}
+            </select>
+
+            <label class="form-label">Pilih Tes</label>
+
+            {% for t in tests %}
+                <div class="form-check ms-2">
+                    <input class="form-check-input" type="checkbox" name="tests" value="{{ t.id }}">
+                    <label class="form-check-label">{{ t.name }}</label>
+                </div>
+            {% endfor %}
+
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-save">Simpan</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+
+
+<!-- ========================================================
+      MODAL EDIT ORDER
+========================================================= -->
+{% if modal == 'edit' and selected_order %}
+<div class="modal fade show" id="modalEditOrder" style="display:block;" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content modal-box">
+
+      <div class="modal-header modal-head">
+        <h5 class="modal-title">Edit Order</h5>
+        <a href="/lab/orders" class="btn-close"></a>
+      </div>
+
+      <form method="post" action="/lab/orders/update/{{ selected_order.id }}">
+        <div class="modal-body">
+
+            <label class="form-label">No Order</label>
+            <input class="form-control input-style mb-3" value="{{ selected_order.order_number }}" disabled>
+
+            <label class="form-label">Pasien</label>
+            <select class="form-select input-style mb-3" name="patient_id">
+                {% for p in patients %}
+                <option value="{{ p.id }}" {% if selected_order.patient_id == p.id %}selected{% endif %}>
+                    {{ p.name }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <h6 class="fw-bold mt-3">Tes Saat Ini</h6>
+            <ol class="ps-3">
+                {% for item in selected_order.items %}
+                <li>
+                    {{ item.test.name }}
+                    <a href="/lab/orders?modal=deleteitem&order_id={{ selected_order.id }}&item_id={{ item.id }}"
+                       class="text-danger ms-2">[hapus]</a>
+                </li>
+                {% endfor %}
+            </ol>
+
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-save">Update</button>
+            <a href="/lab/orders" class="btn btn-cancel">Batal</a>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endif %}
+
+
+
+<!-- ========================================================
+      MODAL DELETE ORDER
+========================================================= -->
+{% if modal == 'delete' and selected_order %}
+<div class="modal fade show" id="modalDeleteOrder" style="display:block;" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered" style="width:fit-content!important;max-width:90vw;margin:auto;">
+
+    <div class="modal-content p-4" style="border-radius:28px;text-align:center;">
+
+        <div class="delete-icon-wrapper">
+            <div class="delete-icon-circle">
+                <i class="bi bi-exclamation-lg"></i>
+            </div>
+        </div>
+
+        <h4 class="delete-title">Hapus Order?</h4>
+
+        <p class="delete-desc">
+            Order <b>{{ selected_order.order_number }}</b><br>
+            Pasien: <b>{{ selected_order.patient.name }}</b>
+        </p>
+
+        <div class="delete-btn-group">
+            <a href="/lab/orders" class="btn delete-cancel">Cancel</a>
+
+            <form method="post" action="/lab/orders/delete/{{ selected_order.id }}">
+                <button class="btn delete-confirm">Delete</button>
+            </form>
+        </div>
+
+    </div>
+  </div>
+</div>
+{% endif %}
+
+
+
+<!-- ========================================================
+      MODAL DELETE ITEM TES
+========================================================= -->
+{% if modal == 'deleteitem' and selected_item %}
+<div class="modal fade show" id="modalDeleteItem" style="display:block;" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered"
+       style="width:fit-content!important;max-width:90vw;margin:auto;">
+
+    <div class="modal-content p-4" style="border-radius:28px;text-align:center;">
+
+        <div class="delete-icon-wrapper">
+            <div class="delete-icon-circle">
+                <i class="bi bi-exclamation-lg"></i>
+            </div>
+        </div>
+
+        <h4 class="delete-title">Hapus Tes?</h4>
+
+        <p class="delete-desc">
+            Tes <b>{{ selected_item.test.name }}</b><br>
+            dari order <b>{{ selected_order.order_number }}</b>
+        </p>
+
+        <div class="delete-btn-group">
+            <a href="/lab/orders?modal=edit&order_id={{ selected_order.id }}" class="btn delete-cancel">Cancel</a>
+
+            <form method="post" action="/lab/orders/{{ selected_order.id }}/items/{{ selected_item.id }}/delete">
+                <button class="btn delete-confirm">Delete</button>
+            </form>
+        </div>
+
+    </div>
+  </div>
+</div>
+{% endif %}
+
+
+
+<!-- ========================================================
+      MODAL ADD ITEM (CHECKLIST AUTO CHECK)
+========================================================= -->
+{% if modal == 'additem' and selected_order %}
+
+{% set existing_ids = selected_order.items | map(attribute='test_id') | list %}
+
+<div class="modal fade show" id="modalAddItem" style="display:block;" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content modal-box">
+
+      <div class="modal-header modal-head">
+        <h5 class="modal-title">Kelola Tes Pada Order {{ selected_order.order_number }}</h5>
+        <a href="/lab/orders?modal=edit&order_id={{ selected_order.id }}" class="btn-close"></a>
+      </div>
+
+      <form method="post" action="/lab/orders/{{ selected_order.id }}/items/create">
+        <div class="modal-body">
+
+          <label class="form-label">Pilih Tes</label>
+
+          {% for t in tests %}
+              <div class="form-check ms-2">
+                <input class="form-check-input"
+                       type="checkbox"
+                       name="tests"
+                       value="{{ t.id }}"
+                       {% if t.id in existing_ids %}checked{% endif %}>
+                <label class="form-check-label">{{ t.name }}</label>
+              </div>
+          {% endfor %}
+
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-save">Simpan Perubahan</button>
+            <a href="/lab/orders?modal=edit&order_id={{ selected_order.id }}" class="btn btn-cancel">Batal</a>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
+
+{% endif %}
+
+
+
+<!-- ========================================================
+      JAVASCRIPT
+========================================================= -->
+<script>
+
+document.getElementById("searchInput").addEventListener("keyup", function () {
+    let filter = this.value.toLowerCase();
+    let rows = document.querySelectorAll("#ordersTable tbody tr");
+
+    rows.forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none";
+    });
+});
+
+
+let rows = document.querySelectorAll("#ordersTable tbody tr");
+let rowsPerPage = 10;
+let pageCount = Math.ceil(rows.length / rowsPerPage);
+let pagination = document.getElementById("pagination");
+
+function showPage(page) {
+    let start = (page - 1) * rowsPerPage;
+    let end = start + rowsPerPage;
+
+    rows.forEach((row, index) => {
+        row.style.display = index >= start && index < end ? "" : "none";
+    });
+
+    document.querySelectorAll(".pagination .page-item")
+        .forEach(li => li.classList.remove("active"));
+
+    document.querySelector(`.page-item[data-page="${page}"]`)
+        ?.classList.add("active");
+}
+
+for (let i = 1; i <= pageCount; i++) {
+    pagination.innerHTML += `
+        <li class="page-item" data-page="${i}">
+            <button class="page-link">${i}</button>
+        </li>
+    `;
+}
+
+if (pageCount > 0) showPage(1);
+
+
+/* ===== AUTO OPEN MODAL ===== */
+{% if modal == 'edit' %}
+new bootstrap.Modal(document.getElementById("modalEditOrder")).show();
+{% elif modal == 'delete' %}
+new bootstrap.Modal(document.getElementById("modalDeleteOrder")).show();
+{% elif modal == 'additem' %}
+new bootstrap.Modal(document.getElementById("modalAddItem")).show();
+{% elif modal == 'deleteitem' %}
+new bootstrap.Modal(document.getElementById("modalDeleteItem")).show();
+{% endif %}
+
+</script>
+
+{% endblock %}

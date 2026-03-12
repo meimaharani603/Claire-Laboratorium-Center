@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.welcome-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #687EFF;
+}
+.dashboard-time {
+    font-size: 20px;
+    font-weight: 600;
+    color: #80B3FF;
+    text-align: right;
+}
+.summary-card {
+    border-radius: 15px;
+    padding: 20px;
+    background: white;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    text-align: center;
+}
+.summary-card h2 {
+    font-weight: 700;
+    color: #687EFF;
+}
+.summary-card p {
+    margin: 0;
+    font-size: 18px;
+    color: #444;
+}
+.quick-form {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+}
+.quick-form h5 {
+    font-weight: 700;
+    color: #687EFF;
+}
+
+.catalog-item {
+    padding: 14px 18px;
+    background: #ffffff;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    border: 1px solid #eef1ff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: .2s ease;
+}
+.catalog-item:hover {
+    background: #f8faff;
+}
+
+.catalog-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2f3e66;
+}
+
+.catalog-search {
+    max-width: 350px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 2px solid #80B3FF;
+}
+.catalog-search input {
+    border: none;
+}
+.catalog-search span {
+    background: white;
+}
+
+.status-badge {
+    padding: 6px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.status-active {
+    background: #d4ffe0;
+    color: #1a9e42;
+}
+
+.status-off {
+    background: #e9e9e9;
+    color: #666;
+}
+
+
+</style>
+
+
+<!-- TOP SECTION -->
+<div class="row align-items-center mb-4">
+
+    <!-- LEFT: Welcome Text -->
+    <div class="col-md-8 mt-4">
+        <div class="welcome-title">
+            Welcome back, <span style="color:#80B3FF;">{{ current_user.username }}</span> 👋
+        </div>
+        <p class="text-muted">Glad to see you again! Here’s what’s happening today:</p>
+    </div>
+
+    <!-- RIGHT: Date & Time -->
+    <div class="col-md-4 dashboard-time">
+        <div id="dashboard-date"></div>
+        <div id="dashboard-time"></div>
+    </div>
+
+</div>
+
+
+<!-- SUMMARY CARDS -->
+<div class="row">
+
+    <div class="col-md-4 mb-3">
+        <div class="summary-card">
+            <h2>{{ users_count }}</h2>
+            <p>Total Users</p>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="summary-card">
+            <h2>{{ tests_count }}</h2>
+            <p>Total Test Catalog</p>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="summary-card">
+            <h2>{{ orders_count }}</h2>
+            <p>Total Orders</p>
+        </div>
+    </div>
+
+</div>
+
+<!-- ===================== STATUS KATALOG TES ===================== -->
+<div class="col-12 mt-4">
+    <div class="card shadow-sm" style="border-radius:18px;">
+        <div class="card-body">
+
+            <h4 class="fw-bold mb-3" style="color:#687EFF;">Status Katalog Tes</h4>
+
+            <!-- SEARCH -->
+            <div class="input-group catalog-search mb-3">
+                <span class="input-group-text">
+                    <i class="bi bi-search" style="color:#80B3FF;"></i>
+                </span>
+                <input type="text"
+                       id="catalogSearch"
+                       class="form-control"
+                       placeholder="Cari katalog tes...">
+            </div>
+
+            <!-- LIST -->
+            <div id="catalogList">
+                {% for t in tests %}
+                <div class="catalog-item">
+
+                    <div class="catalog-name">{{ t.name }}</div>
+
+                    {% if t.active %}
+                        <span class="status-badge status-active">Aktif</span>
+                    {% else %}
+                        <span class="status-badge status-off">Nonaktif</span>
+                    {% endif %}
+
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+<!-- QUICK CREATE FORMS SECTION -->
+
+
+
+<!-- DYNAMIC CONTENT -->
+<div class="mt-4">
+    {% block admin_content %}{% endblock %}
+</div>
+
+
+<script>
+function updateDateTime() {
+    const now = new Date();
+
+    document.getElementById("dashboard-date").innerText =
+        now.toLocaleDateString("en-US", { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+    document.getElementById("dashboard-time").innerText =
+        now.toLocaleTimeString();
+}
+
+setInterval(updateDateTime, 1000);
+updateDateTime();
+
+document.getElementById("catalogSearch").addEventListener("keyup", function () {
+    let filter = this.value.toLowerCase();
+    let items = document.querySelectorAll("#catalogList .catalog-item");
+
+    items.forEach(item => {
+        item.style.display = item.innerText.toLowerCase().includes(filter) 
+                             ? "" : "none";
+    });
+});
+</script>
+{% endblock %}
+
+
+
+

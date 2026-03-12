@@ -1,0 +1,435 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+
+/* ============================
+        HEADER TEXT
+============================ */
+.page-title {
+    font-weight: 700;
+    font-size: 30px;
+    background: linear-gradient(40deg, #687EFF, #80B3FF, #98E4FF, #B6FFFA);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+}
+
+/* ============================
+        SEARCH BAR
+============================ */
+.search-box {
+    max-width: 280px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 2px solid #80B3FF;
+}
+
+.search-box span {
+    background: #fff;
+    border: none;
+}
+
+.search-box input {
+    border: none;
+    box-shadow: none;
+}
+
+.search-box input::placeholder {
+    color: #80B3FF;
+    opacity: .65;
+}
+
+
+/* ============================
+        ADD BUTTON
+============================ */
+.add-btn {
+    color: #80B3FF;
+    border-radius: 16px;
+    border: 2px solid #80B3FF;
+    background-color: white;
+    font-weight: 700;
+}
+
+
+/* ============================
+        TABLE STYLE
+============================ */
+.table-card {
+    border-radius: 16px;
+    border: none;
+}
+
+
+/* ============================
+        MODAL BASE
+============================ */
+.modal-box {
+    border-radius: 28px;
+    padding: 0;
+}
+
+.modal-head {
+    background: white;
+    border-bottom: none;
+    padding: 20px 24px;
+    border-top-left-radius: 28px;
+    border-top-right-radius: 28px;
+}
+
+.modal-title {
+    font-weight: 700;
+    color: #80B3FF;
+}
+
+
+/* INPUT STYLE */
+.input-style {
+    border-radius: 10px;
+    height: 50px;
+    border: 2px solid #98E4FF;
+    padding-left: 12px;
+    transition: 0.25s ease;
+}
+
+.input-style:hover {
+    border-color: #80B3FF !important;
+}
+
+.input-style:focus {
+    border-color: #6A8AFF !important;
+    box-shadow:
+        0px 0px 10px rgba(106,138,255,0.4),
+        0px 0px 15px rgba(152,228,255,0.3) !important;
+    outline: none !important;
+}
+
+
+/* SAVE BUTTON */
+.btn-save {
+    color: #3aa422ff;
+    background: white;
+    border-radius: 16px;
+    border: 2px solid #3aa422ff;
+    font-weight: 700;
+    padding: 8px 18px;
+}
+
+/* CANCEL BUTTON */
+.btn-cancel {
+    border-radius: 16px;
+    padding: 8px 18px;
+    color: #f82a2aff;
+    border: 2px solid #f82a2aff;
+    background: white;
+    font-weight: 700;
+}
+
+
+/* ============================
+        DELETE MODAL
+============================ */
+.delete-icon-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.delete-icon-circle {
+    width: 58px;
+    height: 58px;
+    background: #fff;
+    border: 2px solid #ff6b6b;
+    color: #ff6b6b;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 36px;
+}
+
+.delete-title {
+    margin-top: 8px;
+    font-weight: 700;
+    font-size: 20px;
+    color: #687EFF;
+}
+
+.delete-desc {
+    font-size: 14px;
+    margin-top: 6px;
+    opacity: 0.75;
+}
+
+.delete-btn-group {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.delete-cancel {
+    padding: 10px 26px;
+    border-radius: 14px;
+    border: 2px solid #80B3FF;
+    color: #80B3FF;
+    font-weight: 600;
+    background: white;
+}
+
+.delete-confirm {
+    padding: 10px 26px;
+    border-radius: 14px;
+    font-weight: 600;
+    background: #ff6b6b;
+    color: white;
+    border: none;
+}
+
+</style>
+
+
+
+<h3 class="page-title mt-4">Manajemen Katalog Tes</h3>
+
+<div class="d-flex justify-content-between align-items-center mt-3 mb-3">
+
+    <!-- SEARCH -->
+    <div class="input-group search-box">
+        <span class="input-group-text">
+            <i class="bi bi-search" style="color:#80B3FF;"></i>
+        </span>
+        <input id="searchInput" class="form-control" placeholder="Cari tes...">
+    </div>
+
+    <!-- ADD BUTTON -->
+    <button class="btn add-btn" data-bs-toggle="modal" data-bs-target="#modalAddTest">
+        + Tambah Tes
+    </button>
+</div>
+
+
+<!-- TABLE -->
+<div class="card shadow-sm overflow-hidden table-card">
+    <div class="card-body p-0">
+        <table class="table mb-0" id="testsTable">
+            <thead class="table-primary">
+                <tr>
+                    <th style="width: 90px;">Kode</th>
+                    <th>Nama Tes</th>
+                    <th>Harga</th>
+                    <th>Status</th>
+                    <th style="width: 150px;">Aksi</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for t in tests %}
+                <tr>
+                    <td>{{ t.code }}</td>
+                    <td>{{ t.name }}</td>
+                    <td>{{ t.price }}</td>
+                    <td>{{ 'Aktif' if t.active else 'Nonaktif' }}</td>
+                    <td>
+                        <a href="/admin/tests?modal=edit&id={{ t.id }}" class="btn btn-sm btn-outline-warning">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="/admin/tests?modal=delete&id={{ t.id }}" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- PAGINATION -->
+<nav class="mt-3">
+    <ul class="pagination justify-content-end" id="pagination"></ul>
+</nav>
+
+<!-- ======================================
+        MODAL TAMBAH TES
+====================================== -->
+<div class="modal fade" id="modalAddTest" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-box">
+      <div class="modal-header modal-head">
+        <h5 class="modal-title">Tambah Tes</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form method="post" action="/admin/tests/create">
+        <div class="modal-body">
+          <label class="form-label">Kode</label>
+          <input class="form-control input-style mb-3" name="code">
+
+          <label class="form-label">Nama</label>
+          <input class="form-control input-style mb-3" name="name">
+
+          <label class="form-label">Deskripsi</label>
+          <textarea class="form-control input-style mb-3" name="description"></textarea>
+
+          <label class="form-label">Harga</label>
+          <input class="form-control input-style mb-3" name="price">
+
+          <label class="form-label">Aktif</label>
+          <input type="checkbox" name="active" class="form-check-input">
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-save">Simpan</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+
+
+<!-- ======================================
+        MODAL EDIT TES
+====================================== -->
+{% if modal == 'edit' and edit_test %}
+<div class="modal fade show" id="modalEditTest" tabindex="-1" style="display:block;" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-box">
+
+      <div class="modal-header modal-head">
+        <h5 class="modal-title">Edit Tes</h5>
+        <a href="/admin/tests" class="btn-close"></a>
+      </div>
+
+      <form method="post" action="/admin/tests/update/{{ edit_test.id }}">
+        <div class="modal-body">
+
+          <label class="form-label">Kode</label>
+          <input class="form-control input-style mb-3" name="code" value="{{ edit_test.code }}">
+
+          <label class="form-label">Nama</label>
+          <input class="form-control input-style mb-3" name="name" value="{{ edit_test.name }}">
+
+          <label class="form-label">Deskripsi</label>
+          <textarea class="form-control input-style mb-3" name="description">{{ edit_test.description }}</textarea>
+
+          <label class="form-label">Harga</label>
+          <input class="form-control input-style mb-3" name="price" value="{{ edit_test.price }}">
+
+          <label class="form-label">Aktif</label>
+          <input type="checkbox" name="active" class="form-check-input" {% if edit_test.active %}checked{% endif %}>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-save">Update</button>
+          <a href="/admin/tests" class="btn btn-cancel">Batal</a>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endif %}
+
+
+
+<!-- ======================================
+        MODAL DELETE TES
+====================================== -->
+{% if modal == 'delete' and edit_test %}
+<div class="modal fade show" id="modalDeleteTest" tabindex="-1" style="display:block;" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered" style="width:fit-content;">
+    <div class="modal-content" style="border-radius:28px; padding:32px; text-align:center;">
+
+        <div class="delete-icon-wrapper">
+            <div class="delete-icon-circle">
+                <i class="bi bi-exclamation-lg"></i>
+            </div>
+        </div>
+
+        <h4 class="delete-title">Hapus Tes?</h4>
+
+        <p class="delete-desc">
+            Apakah kamu yakin ingin menghapus <b>{{ edit_test.name }}</b>?
+        </p>
+
+        <div class="delete-btn-group">
+            <a href="/admin/tests" class="btn delete-cancel">Cancel</a>
+
+            <form method="post" action="/admin/tests/delete/{{ edit_test.id }}">
+                <button class="btn delete-confirm">Delete</button>
+            </form>
+        </div>
+
+    </div>
+  </div>
+</div>
+{% endif %}
+
+
+
+<script>
+/* SEARCH */
+document.getElementById("searchInput").addEventListener("keyup", function(){
+    let filter = this.value.toLowerCase();
+    let rows = document.querySelectorAll("#testsTable tbody tr");
+
+    rows.forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none";
+    });
+});
+
+let rows = document.querySelectorAll("#testsTable tbody tr");
+let rowsPerPage = 10;  
+let pageCount = Math.ceil(rows.length / rowsPerPage);
+let pagination = document.getElementById("pagination");
+
+function showPage(page) {
+    let start = (page - 1) * rowsPerPage;
+    let end = start + rowsPerPage;
+
+    rows.forEach((row, index) => {
+        row.style.display = (index >= start && index < end) ? "" : "none";
+    });
+
+    document.querySelectorAll(".pagination .page-item")
+        .forEach(li => li.classList.remove("active"));
+
+    document.querySelector(`.page-item[data-page="${page}"]`)
+        ?.classList.add("active");
+}
+
+// Generate pagination number buttons
+for (let i = 1; i <= pageCount; i++) {
+    pagination.innerHTML += `
+        <li class="page-item" data-page="${i}">
+            <button class="page-link">${i}</button>
+        </li>
+    `;
+}
+
+// Activate page change
+pagination.addEventListener("click", function(e) {
+    if (e.target.tagName === "BUTTON") {
+        let page = parseInt(e.target.innerText);
+        showPage(page);
+    }
+});
+
+// Default show first page
+if (pageCount > 0) showPage(1);
+
+
+
+/* AUTO-OPEN MODALS */
+{% if modal == 'edit' %}
+new bootstrap.Modal(document.getElementById("modalEditTest")).show();
+{% elif modal == 'delete' %}
+new bootstrap.Modal(document.getElementById("modalDeleteTest")).show();
+{% endif %}
+</script>
+
+{% endblock %}

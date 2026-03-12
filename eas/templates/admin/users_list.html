@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+
+
+    /* MODAL BOX */
+    .modal-box {
+        border-radius: 28px;
+        padding: 0;
+    }
+
+    /* HEADER STYLE */
+    .modal-head {
+        background: white;
+        border-bottom: none;
+        padding: 20px 24px;
+        border-top-left-radius: 28px;
+        border-top-right-radius: 28px;
+    }
+
+    .modal-title {
+        font-weight: 700;
+        color: #80B3FF;
+    }
+
+    /* INPUT STYLE */
+    .input-style {
+        border-radius: 10px;
+        height: 50px;
+        border: 2px solid #98E4FF;
+        padding-left: 12px;
+        transition: 0.25s ease;
+    }
+
+    /* HOVER */
+    .input-style:hover {
+        border-color: #80B3FF !important;
+    }
+
+    /* FOCUS (Glow effect) */
+    .input-style:focus {
+        border-color: #6A8AFF !important;
+        box-shadow:
+            0px 0px 10px rgba(106, 138, 255, 0.4),
+            0px 0px 15px rgba(152, 228, 255, 0.3) !important;
+        outline: none !important;
+    }
+
+  
+    .btn-save {
+        color: #3aa422ff;
+        background: white;
+        border-radius: 16px;
+        border: 2px solid #3aa422ff;
+        font-weight: 700;
+        padding: 8px 18px;
+    }
+
+
+    .btn-cancel {
+        border-radius: 16px;
+        padding: 8px 18px;
+        color: #f82a2aff;
+        background: white;
+        border-radius: 16px;
+        border: 2px solid #f82a2aff;
+        font-weight: 700;
+    }
+
+    .btn-delete {
+        border-radius: 16px;
+        padding: 8px 18px;
+    }
+
+.delete-icon-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+/* ICON CIRCLE — warna mengikuti tema biru soft */
+.delete-icon-circle {
+    width: 58px;
+    height: 58px;
+    background: #ffffffff;        /* soft aqua background */
+    border: 2px solid #ff6b6b;    /* border biru */
+    color: #ff6b6b;               /* icon biru */
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 36px;
+}
+
+/* TITLE */
+.delete-title {
+    margin-top: 8px;
+    font-weight: 700;
+    font-size: 20px;
+    color: #687EFF;
+}
+
+/* DESCRIPTION */
+.delete-desc {
+    font-size: 14px;
+    margin-top: 6px;
+    opacity: 0.75;
+}
+.delete-btn-group {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+/* CANCEL BUTTON — BLUE OUTLINE */
+.delete-cancel {
+    padding: 10px 26px;
+    border-radius: 14px;
+    border: 2px solid #80B3FF;
+    color: #80B3FF;
+    font-weight: 600;
+    background: white;
+}
+
+/* DELETE BUTTON — RED SOLID */
+.delete-confirm {
+    padding: 10px 26px;
+    border-radius: 14px;
+    font-weight: 600;
+    background: #ff6b6b;
+    color: white;
+    border: none;
+}
+
+</style>
+<h3 class="mt-4" style="font-weight: 700; font-size: 30px; background: linear-gradient(40deg, #687EFF, #80B3FF, #98E4FF, #B6FFFA); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display:inline-block;">Manajemen User</h3>
+
+<div class="d-flex justify-content-between align-items-center mt-3 mb-3">
+
+    <!-- SEARCH -->
+    <div class="input-group" style="max-width: 280px;  border-radius: 16px;
+    overflow: hidden; border: 2px solid #80B3FF;">
+        <span class="input-group-text" style="background-color: #ffffffff; border:none; ">
+            <i class="bi bi-search" style="color:#80B3FF;"></i>
+        </span>
+        <input type="text" id="searchInput" class="form-control" placeholder="Cari user..." style="border:none;">
+    </div>
+
+    <!-- ADD BUTTON -->
+    <button class="btn" data-bs-toggle="modal" data-bs-target="#modalAddUser" style="color:#80B3FF; border-radius: 16px; border: 2px solid #80B3FF; background-color: white; ">
+        + Tambah User
+    </button>
+</div>
+
+
+<!-- TABLE -->
+<div class="card shadow-sm overflow-hidden" style="border-radius: 16px; border: none;">
+    <div class="card-body p-0 ">
+        <table class="table mb-0" id="usersTable">
+            <thead class="table-primary" >
+                <tr>
+                    <th style="width: 80px;">ID</th>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th style="width: 150px;">Aksi</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>{{ u.id }}</td>
+                    <td>{{ u.username }}</td>
+                    <td>{{ u.role }}</td>
+                    <td>
+                        <a href="/admin/users?modal=edit&id={{ u.id }}" class="btn btn-sm btn-outline-warning">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="/admin/users?modal=delete&id={{ u.id }}" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<!-- PAGINATION -->
+<nav class="mt-3">
+    <ul class="pagination justify-content-end" id="pagination"></ul>
+</nav>
+
+
+
+<div class="modal fade" id="modalAddUser" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-box">
+      <div class="modal-header modal-head">
+        <h5 class="modal-title">Tambah User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="/admin/users/create">
+        <div class="modal-body">
+          <label class="form-label">Username</label>
+          <input class="form-control input-style mb-3" name="username">
+          <label class="form-label">Role</label>
+          <select class="form-select input-style mb-3" name="role">
+              <option value="admin">Admin</option>
+              <option value="lab">Lab</option>
+          </select>
+          <label class="form-label">Password</label>
+          <input class="form-control input-style mb-2" type="password" name="password">
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-save">Simpan</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+
+
+
+{% if modal == 'edit' and edit_user %}
+<div class="modal fade show" id="modalEditUser" tabindex="-1" style="display:block;" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-box">
+
+      <div class="modal-header modal-head">
+        <h5 class="modal-title">Edit User</h5>
+        <a href="/admin/users" class="btn-close"></a>
+      </div>
+
+      <form method="post" action="/admin/users/update/{{ edit_user.id }}">
+        <div class="modal-body">
+          
+          <label class="form-label">Username</label>
+          <input class="form-control input-style mb-3" name="username" value="{{ edit_user.username }}">
+
+          <label class="form-label">Role</label>
+          <select class="form-select input-style mb-3" name="role">
+              <option value="admin" {% if edit_user.role=='admin' %}selected{% endif %}>Admin</option>
+              <option value="lab" {% if edit_user.role=='lab' %}selected{% endif %}>Lab</option>
+          </select>
+
+          <label class="form-label">Password (opsional)</label>
+          <input class="form-control input-style mb-2" type="password" name="password">
+
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-save">Update</button>
+          <a href="/admin/users" class="btn btn-cancel">Batal</a>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endif %}
+
+
+
+{% if modal == 'delete' and edit_user %}
+<div class="modal fade show" id="modalDeleteUser" tabindex="-1" style="display:block;" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered" style=" width: fit-content !important;
+        max-width: 90vw;             /* agar tetap responsif */
+        margin: auto;">
+    <div class="modal-content" style="border-radius: 28px; padding: 32px 28px; text-align: center; ">
+
+  
+        <div class="delete-icon-wrapper">
+            <div class="delete-icon-circle">
+                <i class="bi bi-exclamation-lg"></i>
+            </div>
+        </div>
+
+
+        <h4 class="delete-title">Hapus User?</h4>
+
+
+        <p class="delete-desc">
+            Apakah kamu yakin ingin menghapus <b>{{ edit_user.username }}</b>?<br>
+      
+        </p>
+
+        <div class="delete-btn-group">
+            <a href="/admin/users" class="btn delete-cancel">Cancel</a>
+
+            <form method="post" action="/admin/users/delete/{{ edit_user.id }}">
+                <button class="btn delete-confirm">Delete</button>
+            </form>
+        </div>
+
+    </div>
+  </div>
+</div>
+{% endif %}
+
+
+
+
+<script>
+// SEARCH FUNCTION
+document.getElementById("searchInput").addEventListener("keyup", function () {
+    let filter = this.value.toLowerCase();
+    let rows = document.querySelectorAll("#usersTable tbody tr");
+
+    rows.forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none";
+    });
+});
+
+
+// PAGINATION
+let rows = document.querySelectorAll("#usersTable tbody tr");
+let rowsPerPage = 10;
+let pageCount = Math.ceil(rows.length / rowsPerPage);
+let pagination = document.getElementById("pagination");
+
+function showPage(page) {
+    let start = (page - 1) * rowsPerPage;
+    let end = start + rowsPerPage;
+
+    rows.forEach((row, index) => {
+        row.style.display = index >= start && index < end ? "" : "none";
+    });
+
+    document.querySelectorAll(".pagination .page-item").forEach(li => li.classList.remove("active"));
+    document.querySelector(`.page-item[data-page="${page}"]`)?.classList.add("active");
+}
+
+for (let i = 1; i <= pageCount; i++) {
+    pagination.innerHTML += `
+        <li class="page-item" data-page="${i}">
+            <button class="page-link">${i}</button>
+        </li>
+    `;
+}
+
+if (pageCount > 0) showPage(1);
+
+
+// AUTO OPEN MODAL
+{% if modal == 'edit' %}
+    new bootstrap.Modal(document.getElementById("modalEditUser")).show();
+{% elif modal == 'delete' %}
+    new bootstrap.Modal(document.getElementById("modalDeleteUser")).show();
+{% endif %}
+</script>
+
+{% endblock %}

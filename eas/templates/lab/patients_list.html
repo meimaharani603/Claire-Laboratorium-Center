@@ -1,0 +1,418 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+
+/* TITLE */
+.page-title {
+    font-weight: 700;
+    font-size: 30px;
+    background: linear-gradient(40deg,#687EFF,#80B3FF,#98E4FF,#B6FFFA);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display:inline-block;
+}
+
+/* SEARCH BOX */
+.search-box {
+    max-width: 280px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 2px solid #80B3FF;
+}
+
+.search-box span {
+    background:white;
+    border:none;
+}
+
+.search-box input {
+    border:none;
+}
+
+.search-box input::placeholder {
+    color:#80B3FF;
+    opacity:0.7;
+}
+
+/* ADD BUTTON */
+.add-btn {
+    color:#80B3FF;
+    border-radius: 16px;
+    border: 2px solid #80B3FF;
+    background:white;
+    font-weight:700;
+}
+
+/* TABLE WRAPPER */
+.table-card {
+    border-radius: 16px;
+    border:none;
+}
+
+/* INPUT STYLING */
+.input-style {
+    border-radius: 10px;
+    height: 50px;
+    border: 2px solid #98E4FF;
+    transition: 0.25s;
+}
+
+.input-style:hover {
+    border-color:#80B3FF !important;
+}
+
+.input-style:focus {
+    border-color:#6A8AFF !important;
+    box-shadow:
+        0 0 10px rgba(106,138,255,0.4),
+        0 0 15px rgba(152,228,255,0.3) !important;
+    outline:none !important;
+}
+
+/* SAVE BUTTON */
+.btn-save {
+    color:#3aa422ff;
+    background:white;
+    border-radius:16px;
+    border:2px solid #3aa422ff;
+    font-weight:700;
+    padding:8px 18px;
+}
+
+/* CANCEL BUTTON */
+.btn-cancel {
+    color:#f82a2a;
+    background:white;
+    border:2px solid #f82a2a;
+    border-radius:16px;
+    font-weight:700;
+    padding:8px 18px;
+}
+
+/* DELETE MODAL */
+.delete-icon-wrapper {
+    display:flex;
+    justify-content:center;
+    margin-bottom:12px;
+}
+
+.delete-icon-circle {
+    width:58px;
+    height:58px;
+    border-radius:50%;
+    background:white;
+    border:2px solid #ff6b6b;
+    color:#ff6b6b;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:36px;
+}
+
+.delete-title {
+    margin-top:8px;
+    font-weight:700;
+    font-size:20px;
+    color:#687EFF;
+}
+
+.delete-desc {
+    opacity:0.8;
+    font-size:14px;
+}
+
+.delete-btn-group {
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    margin-top:20px;
+}
+
+.delete-cancel {
+    padding:10px 26px;
+    border-radius:14px;
+    border:2px solid #80B3FF;
+    background:white;
+    color:#80B3FF;
+    font-weight:600;
+}
+
+.delete-confirm {
+    padding:10px 26px;
+    border-radius:14px;
+    background:#ff6b6b;
+    color:white;
+    border:none;
+    font-weight:600;
+}
+
+</style>
+
+
+<!-- ================================
+            TITLE + SEARCH + ADD
+================================= -->
+<h3 class="page-title mt-4">Manajemen Data Pasien</h3>
+
+<div class="d-flex justify-content-between align-items-center mt-3 mb-3">
+
+    <!-- SEARCH -->
+    <div class="input-group search-box">
+        <span class="input-group-text">
+            <i class="bi bi-search" style="color:#80B3FF;"></i>
+        </span>
+        <input type="text" id="searchInput" class="form-control" placeholder="Cari pasien...">
+    </div>
+
+    <!-- BUTTON -->
+    <button class="btn add-btn" data-bs-toggle="modal" data-bs-target="#modalAddPatient">
+        + Tambah Pasien
+    </button>
+</div>
+
+
+
+<!-- ================================
+            TABLE
+================================= -->
+<div class="card shadow-sm table-card overflow-hidden">
+    <div class="card-body p-0">
+        <table class="table mb-0" id="patientsTable">
+            <thead class="table-primary">
+                <tr>
+                    <th>MRN</th>
+                    <th>Nama</th>
+                    <th>Lahir</th>
+                    <th>Gender</th>
+                    <th>Telepon</th>
+                    <th style="width:150px;">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in patients %}
+                <tr>
+                    <td>{{ p.medical_record_number }}</td>
+                    <td>{{ p.name }}</td>
+                    <td>{{ p.birth_date }}</td>
+                    <td>{{ p.gender }}</td>
+                    <td>{{ p.phone }}</td>
+                    <td>
+                        <a href="/lab/patients?modal=edit&id={{ p.id }}" class="btn btn-sm btn-outline-warning">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+
+                        <a href="/lab/patients?modal=delete&id={{ p.id }}" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<!-- ================================
+            PAGINATION
+================================= -->
+<nav class="mt-3">
+    <ul class="pagination justify-content-end" id="pagination"></ul>
+</nav>
+
+
+
+
+<!-- ================================
+        MODAL TAMBAH PASIEN
+================================= -->
+<div class="modal fade" id="modalAddPatient" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-box">
+
+      <div class="modal-header modal-head">
+        <h5 class="modal-title">Tambah Pasien</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form method="post" action="/lab/patients/create">
+        <div class="modal-body">
+
+          <label class="form-label">MRN (otomatis)</label>
+          <input class="form-control input-style mb-3" name="medical_record_number"
+                 value="{{ generated_mrn }}" readonly>
+
+          <label class="form-label">Nama</label>
+          <input class="form-control input-style mb-3" name="name" required>
+
+          <label class="form-label">Tanggal Lahir</label>
+          <input type="date" class="form-control input-style mb-3" name="birth_date" required>
+
+          <label class="form-label">Gender</label>
+          <select class="form-select input-style mb-3" name="gender" required>
+              <option value="">-- Pilih Gender --</option>
+              <option value="Laki-laki">Laki-laki</option>
+              <option value="Perempuan">Perempuan</option>
+          </select>
+
+          <label class="form-label">Alamat</label>
+          <textarea class="form-control input-style mb-3" name="address"></textarea>
+
+          <label class="form-label">Telepon</label>
+          <input type="tel" class="form-control input-style mb-3"
+                 name="phone" placeholder="">
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-save">Simpan</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+
+
+
+<!-- ================================
+        MODAL EDIT PASIEN
+================================= -->
+{% if modal == 'edit' and edit_patient %}
+<div class="modal fade show" id="modalEditPatient" style="display:block;" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-box">
+
+      <div class="modal-header modal-head">
+        <h5 class="modal-title">Edit Pasien</h5>
+        <a href="/lab/patients" class="btn-close"></a>
+      </div>
+
+      <form method="post" action="/lab/patients/update/{{ edit_patient.id }}">
+        <div class="modal-body">
+
+            <label class="form-label">MRN</label>
+            <input class="form-control input-style mb-3" value="{{ edit_patient.medical_record_number }}" readonly>
+
+            <label class="form-label">Nama</label>
+            <input class="form-control input-style mb-3" name="name" value="{{ edit_patient.name }}">
+
+            <label class="form-label">Tanggal Lahir</label>
+            <input type="date" class="form-control input-style mb-3" name="birth_date" value="{{ edit_patient.birth_date }}">
+
+            <label class="form-label">Gender</label>
+            <select class="form-select input-style mb-3" name="gender">
+                <option value="Laki-laki" {% if edit_patient.gender=='Laki-laki' %}selected{% endif %}>Laki-laki</option>
+                <option value="Perempuan" {% if edit_patient.gender=='Perempuan' %}selected{% endif %}>Perempuan</option>
+            </select>
+
+            <label class="form-label">Alamat</label>
+            <textarea class="form-control input-style mb-3" name="address">{{ edit_patient.address }}</textarea>
+
+            <label class="form-label">Telepon</label>
+            <input class="form-control input-style mb-3" name="phone" value="{{ edit_patient.phone }}">
+
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-save">Update</button>
+          <a href="/lab/patients" class="btn btn-cancel">Batal</a>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endif %}
+
+
+
+
+<!-- ================================
+        MODAL DELETE PASIEN
+================================= -->
+{% if modal == 'delete' and edit_patient %}
+<div class="modal fade show" id="modalDeletePatient" style="display:block;" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered" style="width:fit-content;">
+    <div class="modal-content" style="border-radius:28px; padding:32px; text-align:center;">
+
+        <div class="delete-icon-wrapper">
+            <div class="delete-icon-circle">
+                <i class="bi bi-exclamation-lg"></i>
+            </div>
+        </div>
+
+        <h4 class="delete-title">Hapus Pasien?</h4>
+
+        <p class="delete-desc">
+            Apakah kamu yakin ingin menghapus <b>{{ edit_patient.name }}</b>?
+        </p>
+
+        <div class="delete-btn-group">
+            <a href="/lab/patients" class="btn delete-cancel">Cancel</a>
+
+            <form method="post" action="/lab/patients/delete/{{ edit_patient.id }}">
+                <button class="btn delete-confirm">Delete</button>
+            </form>
+        </div>
+
+    </div>
+  </div>
+</div>
+{% endif %}
+
+
+
+
+<!-- ================================
+            JS: SEARCH + PAGINATION
+================================= -->
+<script>
+
+// SEARCH
+document.getElementById("searchInput").addEventListener("keyup", function() {
+    let filter = this.value.toLowerCase();
+    let rows = document.querySelectorAll("#patientsTable tbody tr");
+
+    rows.forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none";
+    });
+});
+
+// PAGINATION (Optional, same engine as users_list)
+let rows = document.querySelectorAll("#patientsTable tbody tr");
+let rowsPerPage = 10;
+let pageCount = Math.ceil(rows.length / rowsPerPage);
+let pagination = document.getElementById("pagination");
+
+function showPage(page) {
+    let start = (page - 1) * rowsPerPage;
+    let end = start + rowsPerPage;
+
+    rows.forEach((row, index) => {
+        row.style.display = (index >= start && index < end) ? "" : "none";
+    });
+}
+
+for (let i = 1; i <= pageCount; i++) {
+    pagination.innerHTML += `
+        <li class="page-item" data-page="${i}">
+            <button class="page-link">${i}</button>
+        </li>
+    `;
+}
+
+if (pageCount > 0) showPage(1);
+
+
+// AUTO-OPEN MODALS
+{% if modal == 'edit' %}
+new bootstrap.Modal(document.getElementById("modalEditPatient")).show();
+{% elif modal == 'delete' %}
+new bootstrap.Modal(document.getElementById("modalDeletePatient")).show();
+{% endif %}
+
+</script>
+
+{% endblock %}

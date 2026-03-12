@@ -1,0 +1,30 @@
+{% extends "admin/dashboard.html" %}
+{% block admin_content %}
+
+<h4>{{ 'Edit User' if user else 'Tambah User' }}</h4>
+
+<form method="post" class="card p-4 shadow-sm">
+
+    <div class="mb-3">
+        <label>Username</label>
+        <input name="username" class="form-control" value="{{ user.username if user else '' }}" required>
+    </div>
+
+    <div class="mb-3">
+        <label>Role</label>
+        <select name="role" class="form-select">
+            <option value="admin" {% if user and user.role=='admin' %}selected{% endif %}>Admin</option>
+            <option value="lab" {% if user and user.role=='lab' %}selected{% endif %}>Lab</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label>Password (Kosongkan jika tidak ganti)</label>
+        <input type="password" name="password" class="form-control">
+    </div>
+
+    <button class="btn btn-success">Simpan</button>
+
+</form>
+
+{% endblock %}
